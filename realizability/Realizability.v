@@ -120,7 +120,7 @@ Proof.
    inversion H. apply fv. apply IHn. intros. destruct H0 with (i:=i). assumption. exists x. inversion H2. assumption.
 Qed.
 
-Theorem unrealizable_soundness : forall (s : state) (init : initial) (t : transition) a gi gt,
+Theorem unrealizable_soundness : forall (init : initial) (t : transition) a gi gt,
 (exists n, ~Basecheck n a gi gt) -> ~ realizable_contract a gi gt.
 Proof.
   intros. unfold not. intros. apply realcontract_implies_real in H0. inversion H0. inversion H1. inversion H2. inversion H. apply viable_implies_finite_viable with (n:=x0) in H4.
@@ -150,7 +150,7 @@ Proof.
  apply gi. apply H1. inversion H. assumption.
 Qed.
 
-Theorem realizable_soundness : forall (s : state) (init : initial) (t : transition) a gi gt,
+Theorem realizable_soundness : forall (init : initial) (t : transition) a gi gt,
 (exists n, (Basecheck n a gi gt /\ Extendcheck n a gt)) -> realizable_contract a gi gt.
 Proof.
   intros. apply real_implies_realcontract. apply init. apply t. apply rl.
