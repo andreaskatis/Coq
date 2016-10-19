@@ -192,3 +192,11 @@ Proof.
   apply H1. apply le_S. apply le_n. assumption. assumption.
   assumption.
 Qed.
+
+Definition witness (i:inputs) (n:nat) (s:state) (a:assumption) (gi: iguarantee) (gt: tguarantee) :=
+forall i s k n, (k<=n -> (a s i) /\ exists s', gt s i s') /\ extendable (S n) s a gt.
+
+Theorem asd : forall i n a gi gt, (Basecheck n a gi gt /\ Extendcheck n a gt) -> exists s, witness i n s a gi gt.
+intros.
+  inversion H. inversion H0. exists x. inversion H2. assert (H5: extendable n x a gt). apply H1. unfold witness.
+  intros. split. intros.
