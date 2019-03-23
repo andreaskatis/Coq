@@ -1,0 +1,26 @@
+Inductive list : Type :=
+|nil: list
+|cons: nat -> list -> list.
+
+Fixpoint length (l : list) : nat :=
+match l with
+|nil => O
+|cons n l' => S (length l')
+end.
+
+Fixpoint sum (l : list) : nat :=
+match l with
+|nil => O
+|cons n l' => n + (sum l')
+end.
+
+Fixpoint app (l1 l2 : list) : list :=
+  match l1 with
+  | nil    => l2
+  | cons h t => cons h (app t l2)
+  end.
+
+Theorem pigeonhole : forall (l : list),
+sum l > length l -> exists n l1 l2, l = app l1 (cons n l2) /\ n > 1.
+Proof.
+intros. induction l. inversion H. apply H in IH.
