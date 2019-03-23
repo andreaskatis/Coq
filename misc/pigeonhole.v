@@ -26,12 +26,6 @@ match l with
 |cons n l' => n >= 2 \/ elemgtone l'
 end.
 
-Fixpoint allelemsgtzero (l : list) : Prop :=
-match l with
-|nil => True
-|cons n l' => n >= 0 /\ allelemsgtzero l'
-end.
-
 Fixpoint sumgtlen (l : list) : Prop :=
 match l with
 |nil => True
