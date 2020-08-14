@@ -118,6 +118,101 @@ Proof. intros a gi gt n. induction n. intros. simpl. auto.
   intros. split. apply H3. apply IHn. apply H4.
 Qed.
 
+Definition Validity_Region := state -> Prop.
+
+Definition valid_formula (vr: Validity_Region) a gt : Prop :=
+forall s (i:inputs), ((a s i /\ vr s) <-> exists (s':state), gt s i s').
+
+Lemma Region_implies_exists : forall (vr:Validity_Region) a gt,
+valid_formula vr a gt -> (forall s (i:inputs), a s i -> (vr s -> exists (s':state), gt s i s')).
+Proof. intros. unfold valid_formula in H. apply H. split. assumption. assumption. Qed.
+
+
+Lemma Exists_implies_region : forall (vr:Validity_Region) a gt,
+valid_formula vr a gt -> (forall s (i:inputs), (a s i /\ exists (s':state), gt s i s') -> vr s).
+Proof. intros. unfold valid_formula in H. inversion H0. apply H in H2. inversion H2. assumption.
+Qed.
+
+Definition Validity_Region (X Y:Type) (s:X) (i:Y) (A : X -> Y -> Prop) (G : X -> Y -> X -> Prop) : Prop :=
+(A s i -> exists s', G s i s').
+
+Lemma Region_implies_exists : forall (X Y:Type) (A: X -> Y -> Prop) (G: X -> Y -> X -> Prop),
+forall s i, A s i -> Validity_Region X Y s i A G -> exists s', G s i s'.
+Proof. intros. unfold Validity_Region in H0. apply H0. assumption. Qed.
+
+Lemma Exists_implies_region : forall (X Y:Type) (A: X -> Y -> Prop) (G: X -> Y -> X -> Prop),
+forall s i, A s i -> exists s', G s i s' -> Validity_Region X Y s i A G.
+Proof. intros. assert (H2: (exists s', G s i s' -> Validity_Region X Y s i A G) -> False).
+intros. assert (s0:X). assumption. assert (i0:Y). assumption. assert (H1 : (exists s0', G s0 i0 s0') /\ (~Validity_Region X Y s0 i0 A G)).
+split. 
+
+
+ split. apply Region_implies_exists with (X:=X) (Y:=Y) (G:=G) (s:=s) (i:=i) in H.
+apply H. apply H0.
+
+ exists x. exists i.
+
+Proof. intros. assert (H1: exists s0 i0, A s0 i0 /\ (exists s0', G s0 i0 s0') /\ (Validity_Region X Y A G -> False)).
+assert (H1: A s i). assumption.
+apply Region_implies_exists with (X:=X) (Y:=Y) (G:=G) (s:=s) (i:=i) in H.
+inversion H. exists s. exists i. split. assumption. split.  exists x. assumption. intros.
+apply H0. intros. assumption.
+unfold Validity_Region. intros. simpl. neg. intros.
+
+inversion H0.
+ apply H0. intros. unfold Validity_Region. inversion H1. intros.  apply Region_implies_exists with (X:=X) (Y:=Y) (G:=G) (s:=s0) (i:=i0) in H3.
+assumption. unfold Validity_Region. intros. apply H2 with (s0:=s) (i0:=i) (s':=x). intros. inversion H1. exists x. assumption.
+
+A s i -> (Validity_Region s i A G -> exists s', G s i s').
+a s i -> (Validity_Region s i a gt -> exists s', gt s i s').
+Proof. intros. unfold Validity_Region in H0. apply H0 in H. assumption. Qed.
+
+
+Definition Validity_Region (s:state) (i:inputs) (a:assumption) (gt:tguarantee) :=
+(a s i -> exists s', gt s i s').
+
+Lemma Region_implies_exists : forall s i (a:assumption) gt,
+a s i -> (Validity_Region s i a gt -> exists s', gt s i s').
+Proof. intros. unfold Validity_Region in H0. apply H0 in H. assumption. Qed.
+
+Lemma Exists_implies_region : forall (a:assumption) gt i s,
+a s i -> (~((exists s', gt s i s') -> Validity_Region s i a gt) -> False).
+Proof. intros. apply H0. intros. unfold Validity_Region. intros. assumption. Qed.
+
+
+(*
+Fixpoint Validity_Region (n:nat) (s:state) (a:assumption) (gi:iguarantee) :=
+match n with
+|O => forall i, (a s i -> exists s', gt s i s').
+|S n => forall i, (a s i /\ Validity_Region n
+
+
+Fixpoint F (n:nat) (s :state) (a:assumption) (gi:iguarantee)(gt:tguarantee) :=
+match n with
+|O => exists s, gi s
+|S n' => forall i, a s i -> exists s', gt s i s' -> F n' s' a gi gt
+end.
+
+Theorem vbl_f : forall  (i:inputs) a gi gt n (s:state),
+exists s' gi s'(gi s /\ viable s a gi gt) -> F n s a gi gt.
+Proof. intros i a gi gt n. induction n. intros. simpl. inversion H. exists s. apply H0.
+       intros. inversion H. simpl. intros. apply H1 in H2. inversion H2. inversion H3.
+       exists x. intros. apply IHn. split
+
+ simpl. inversion H. exists s. assumption.
+       simpl. intros. inversion H.  inversion H2.  apply H3 in H0.  inversion H0. 
+       exists x.  inversion H4. intros. split. assumption. simpl. apply IHn. split. inversion H. inversion H1. apply
+
+
+
+ intros s i a gi gt. induction n. intros. inversion H. simpl. exists s. apply H0.
+       intros. simpl.  intros. inversion H.  inversion H2. apply H3 in H0.
+       inversion H0. exists x. split.  inversion H4. assumption. apply IHn. exists x. exists s.
+       split. apply H3 in H0. apply H0. apply H3 in H0. inversion H0. 
+       exists s. split.
+       simpl. intros. inversion H. inversion H2. apply H3 in H0. inversion H0.
+       exists x. inversion H4. split. assumption. apply IHn.*)
+
 Theorem unrealizable_soundness : forall (s:state) (init:initial) (t:transition) a gi gt,
 (exists n, ~Basecheck n a gi gt) -> ~ realizable_contract a gi gt.
 Proof.
@@ -181,6 +276,8 @@ Proof.
   exists x0. split. assumption. apply fv_ex_implies_viable with (n:=x). apply gi. apply t. split.
   assumption. assumption.
 Qed.
+
+
 
 Definition Basecheck_simple (n:nat) (a:assumption) (gi:iguarantee) (gt:tguarantee):=
 forall s, (gi s) -> extendable n s a gt.
