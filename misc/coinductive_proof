@@ -1,0 +1,24 @@
+(*A small coinductive proof for showcasing *)
+
+Set Implicit Arguments.
+
+CoInductive colist (A:Set) : Set :=
+  | cocons : A -> colist A -> colist A.
+  
+CoFixpoint from (n:nat) : colist nat := cocons n (from (1 + n)).
+
+CoInductive Infinite A : colist A -> Prop :=
+  | Inf : forall x l, Infinite l -> Infinite (cocons x l).
+  
+Definition frob A (s : colist A) : colist A :=
+match s with
+|cocons h t => cocons h t
+end.
+
+Theorem frob_eq : forall A (s : colist A), s = frob s.
+  destruct s; reflexivity.
+Qed.
+  
+Theorem fromInf : forall n, Infinite (from n).
+Proof.
+cofix fr. intros. rewrite (frob_eq (from n)). simpl. apply Inf. apply fr. Guarded. Qed.
